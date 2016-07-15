@@ -20,8 +20,10 @@ function start(port) {
     app.use("/meta", require("./handle/meta"));
     app.use("/keyword", require("./handle/keyword"));
     app.use("/delete", require("./handle/delete"));
-    
-    app.listen(port || 3000);
+
+    app.use("/redis/keyword", require("./handle8/keyword"));
+
+    app.listen(port || 3008);
 }
 
 start();
