@@ -7,5 +7,8 @@ var redisClient = require('../lib/redis');
 router.get('/',function(req,res){
     const params = request.query;
     const keyword = params.search;
+    redisClient.on('connect', function(){
+        
+    })
     res.send(keyword);
 });
