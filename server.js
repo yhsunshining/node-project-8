@@ -21,7 +21,7 @@ function start(port) {
     app.use("/keyword", require("./handle/keyword"));
     app.use("/delete", require("./handle/delete"));
 
-    app.use("/redis/keyword", require("./handle8/keyword"));
+    app.use("/redis/keyword", require("./handle8/list"));
 
     app.listen(port || 3008);
 }
