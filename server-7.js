@@ -31,7 +31,6 @@ app.use('/', function(req, res) {
         })
     }
     else {
-        console.log('1')
         transport(req,res);
     }
 });
@@ -62,7 +61,8 @@ function transport(req,res){
                 afterRequest(req,res,body)
             }
             else {
-                res.send(JSON.parse(body));
+                console.log(JSON.parse(body));
+                // res.send(JSON.parse(body));
                 return ;
             }
         });
