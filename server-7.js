@@ -50,14 +50,13 @@ function transport(req,res){
         return;
     }).on('response', function(response) {
         // redis缓存处理
-        console.log(response);
         console.log('cache');
         var bodyChunks = [];
         response.on('data', function(chunk) {
             bodyChunks.push(chunk);
         }).on('end', function() {
             var body = Buffer.concat(bodyChunks);
-            onsole.log(body);
+            console.log(body);
             var afterRequest = routesConfig[req.path].afterRequest;
             if(afterRequest !== undefined){
                 afterRequest(req,res,body)
