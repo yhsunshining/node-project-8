@@ -57,6 +57,7 @@ function transport(req,res){
             }
             else {
                 res.send(JSON.parse(body));
+                return ;
             }
         });
     }).pipe(res);
