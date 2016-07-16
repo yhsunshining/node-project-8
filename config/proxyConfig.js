@@ -9,7 +9,7 @@ module.exports = {
 		'port': 1000,
 	},
 	'part4': {
-		'host': '127.0.0.1',
+		'host': '119.29.70.101',
 		'port': 3000,
 	},
 	'part5': {

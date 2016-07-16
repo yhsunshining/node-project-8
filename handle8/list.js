@@ -21,34 +21,24 @@ module.exports.checkRedis = function(req, res,callback) {
         start = pageIndex * pageSize;
     }
     var redisClient = require('../lib/redis');
-    console.log('will enter redis');
-    redisClient.select('0', function(err) {
-        console.log('select 1');
+    var key = keyword + '\\' + pageIndex + '\\' + pageSize;
+    redisClient.get(key, function(err, result) {
         if (err) {
             console.log(err);
             print(err);
             return ;
         }
         else {
-            var key = keyword + '\\' + pageIndex + '\\' + pageSize;
-            redisClient.get(key, function(err, result) {
-                if (err) {
-                    console.log(err);
-                    print(err);
-                    return ;
-                }
-                else {
-                    if (result) {
-                        print(JSON.parse(result));
-                        return ;
-                    }
-                    else {
-                        callback();
-                    }
-                }
-            })
+            if (result) {
+                console.log('hint')
+                print(JSON.parse(result));
+                return ;
+            }
+            else {
+                callback();
+            }
         }
-    });
+    })
 };
 
 module.exports.addRedis = function(req,res,data) {
@@ -61,11 +51,12 @@ module.exports.addRedis = function(req,res,data) {
     let key = keyword + '\\' + pageIndex + '\\' + pageSize;
 
     var redisClient = require('../lib/redis');
-    redisClient.select('0', function(err) {
-        if (err) {
+
+    redisClient.sadd(keyword,key,function(err,result) {
+        if(err) {
             console.log(err);
             print(err);
-            return;
+            return err;
         }
         else {
             redisClient.set(key,data, function(err, result) {
@@ -76,10 +67,11 @@ module.exports.addRedis = function(req,res,data) {
                 }
                 else {
                     redisClient.expire(key, 5 * 60);
-                    print(JSON.parse(result));
-                    return ;
+                    console.log('expire');
+                    print(result);
+                    return;
                 }
-            })
+            });
         }
-    });
+    })
 };

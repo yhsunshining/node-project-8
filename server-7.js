@@ -54,6 +54,7 @@ function transport(req,res){
         response.on('data', function(chunk) {
             bodyChunks.push(chunk);
         }).on('end', function() {
+            console.log(bodyChunks);
             var body = Buffer.concat(bodyChunks);
             console.log(body);
             var afterRequest = routesConfig[req.path].afterRequest;
