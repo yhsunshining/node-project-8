@@ -24,6 +24,7 @@ app.use('/', function(req, res) {
     var beforeRequest = routesConfig[req.path].beforeRequest;
     if(beforeRequest !== undefined){
         beforeRequest(req,res,function(){
+            console.log('redis');
             transport(req,res);
         })
     }
@@ -33,6 +34,7 @@ app.use('/', function(req, res) {
 });
 
 function transport(req,res){
+    var pathArr = req.path.split('/');
     // 设置转发url
     var targetUrl = 'http://' + proxyConfig[pathArr[1]].host + ':' + proxyConfig[pathArr[1]].port + req.originalUrl.replace(/\/part\d/, '');
     // 重置请求方式
