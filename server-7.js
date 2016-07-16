@@ -15,9 +15,11 @@ app.use(methodOverride());
 // 请求示例：http://127.0.0.1/part4/upload
 app.use('/', function(req, res) {
     var pathArr = req.path.split('/');
+    console.log(pathArr);
     // 针对不在配置文件中的路由进行错误处理
     if (!proxyConfig[pathArr[1]] || !routesConfig[req.path]) {
-
+        console.log(proxyConfig[pathArr[1]]);
+        console.log(routesConfig[req.path]);
         res.status(404).send('Not found:' + req.originalUrl);
         return;
     }
