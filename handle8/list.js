@@ -4,12 +4,14 @@
 var router = require('express').Router();
 const printer = require("../lib/printer");
 
-router.get('/', function(req, res) {
+module.exports.checkRedis = function(req, res,callback) {
     const params = req.query;
     const keyword = params.search || '';
     let pageIndex = +params.pageIndex;
     let pageSize = +params.pageSize;
     let start = 0;
+    const print = printer(req, res);
+
     // see if user has request for a paging
     if (!isNaN(pageIndex) && !isNaN(pageSize)) {
         pageIndex = pageIndex || 0;
@@ -17,52 +19,63 @@ router.get('/', function(req, res) {
         start = pageIndex * pageSize;
     }
     var redisClient = require('../lib/redis');
-    redisClient.select('1', function(error) {
-        if (error) {
-            console.log(error);
-            res.send(error)
-        }
-        else {
-            var key = keyword + '\\' + pageIndex + '\\' + pageSize;
-            redisClient.get(key,function(err,result) {
-                if(err){
-                    console.log(err);
-                    res.send(err);
-                }
-                else {
-                    if(result){
-                        res.send(result);
-                    }
-                    else {
-                        res.send('keyword:' + keyword);
-                    }
-                }
-            })
-        }
-    });
-});
-
-var addRedis = function(keyword, res) {
-    var redisClient = require('../lib/redis');
     redisClient.select('1', function(err) {
         if (err) {
             console.log(err);
-            return;
+            print(err);
+            return ;
         }
         else {
-            var key = keyword + '\\' + res.paging.pageIndex + '\\' + res.paging.pageSize;
-            redisClient.set(key,JSON.stringify(res),function(err,result) {
-                if(err){
+            var key = keyword + '\\' + pageIndex + '\\' + pageSize;
+            redisClient.get(key, function(err, result) {
+                if (err) {
                     console.log(err);
-                    return err;
+                    print(err);
+                    return ;
                 }
                 else {
-                    redisClient.expire(key,5*60);
+                    if (result) {
+                        print(JSON.parse(result));
+                        return ;
+                    }
+                    else {
+                        callback();
+                    }
                 }
             })
         }
     });
 };
 
+module.exports.addRedis = function(req,res,data) {
+    const print = printer(req, res);
 
-module.exports = router;
+    const params = req.query;
+    const keyword = params.search || '';
+    let pageIndex = +params.pageIndex;
+    let pageSize = +params.pageSize;
+    let key = keyword + '\\' + pageIndex + '\\' + pageSize;
+
+    var redisClient = require('../lib/redis');
+    redisClient.select('1', function(err) {
+        if (err) {
+            console.log(err);
+            print(err);
+            return;
+        }
+        else {
+            redisClient.set(key,data, function(err, result) {
+                if (err) {
+                    console.log(err);
+                    print(err);
+                    return err;
+                }
+                else {
+                    redisClient.expire(key, 5 * 60);
+                    print(JSON.parse(result));
+                    return ;
+                }
+            })
+        }
+    });
+};

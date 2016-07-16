@@ -19,7 +19,9 @@ module.exports = {
 	},
 	'/part4/list': {
 		'method': 'get',
-		'path': '/list'
+		'path': '/list',
+		'beforeRequest':require('../handle8/list').checkRedis,
+		'afterRequest':require('../handle8/list').addRedis
 	},
 	'/part4/meta': {
 		'method': 'put',
