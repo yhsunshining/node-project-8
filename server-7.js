@@ -50,7 +50,8 @@ function transport(req,res){
         return;
     }).on('response', function(response) {
         // redis缓存处理
-        onsole.log('cache');
+        console.log(response);
+        console.log('cache');
         var bodyChunks = [];
         response.on('data', function(chunk) {
             bodyChunks.push(chunk);
