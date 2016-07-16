@@ -31,6 +31,7 @@ app.use('/', function(req, res) {
         })
     }
     else {
+        console.log('1')
         transport(req,res);
     }
 });
@@ -44,15 +45,18 @@ function transport(req,res){
     // 不能使用bodyParser，会把req里数据流进行更改，对pipe方法造成影响
     req.pipe(request(targetUrl)).on('error', function(err) {
         // 处理目标服务器错误
+        console.log('target server error');
         res.status(404).send('Not found:' + req.originalUrl);
         return;
     }).on('response', function(response) {
         // redis缓存处理
+        onsole.log('cache');
         var bodyChunks = [];
         response.on('data', function(chunk) {
             bodyChunks.push(chunk);
         }).on('end', function() {
             var body = Buffer.concat(bodyChunks);
+            onsole.log(body);
             var afterRequest = routesConfig[req.path].afterRequest;
             if(afterRequest !== undefined){
                 afterRequest(req,res,body)
