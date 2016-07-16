@@ -1,6 +1,8 @@
 /**
  * Created by royhyang on 2016/7/15.
  */
+"use strict";
+
 var router = require('express').Router();
 const printer = require("../lib/printer");
 
