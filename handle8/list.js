@@ -22,7 +22,7 @@ module.exports.checkRedis = function(req, res,callback) {
     }
     var redisClient = require('../lib/redis');
     console.log('will enter redis');
-    redisClient.select('1', function(err) {
+    redisClient.select('0', function(err) {
         console.log('select 1');
         if (err) {
             console.log(err);
@@ -61,7 +61,7 @@ module.exports.addRedis = function(req,res,data) {
     let key = keyword + '\\' + pageIndex + '\\' + pageSize;
 
     var redisClient = require('../lib/redis');
-    redisClient.select('1', function(err) {
+    redisClient.select('0', function(err) {
         if (err) {
             console.log(err);
             print(err);
