@@ -21,6 +21,8 @@ module.exports.checkRedis = function(req, res,callback) {
         start = pageIndex * pageSize;
     }
     var redisClient = require('../lib/redis');
+    console.log('will enter redis');
+    console.log(redisClient)
     redisClient.select('1', function(err) {
         if (err) {
             console.log(err);
