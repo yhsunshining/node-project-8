@@ -10,10 +10,10 @@ module.exports = {
 	},
 	'part4': {
 		'host': '127.0.0.1',
-		'port': 2000,
+		'port': 3000,
 	},
 	'part5': {
 		'host': '127.0.0.1',
-		'port': 3000,
+		'port': 3010
 	}
 }
