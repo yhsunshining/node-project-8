@@ -26,7 +26,6 @@ app.use('/', function(req, res) {
     var beforeRequest = routesConfig[req.path].beforeRequest;
     if(beforeRequest !== undefined){
         beforeRequest(req,res,function(){
-            console.log('redis');
             transport(req,res);
         })
     }
@@ -44,7 +43,6 @@ function transport(req,res){
     // 不能使用bodyParser，会把req里数据流进行更改，对pipe方法造成影响
     req.pipe(request(targetUrl)).on('error', function(err) {
         // 处理目标服务器错误
-        console.log('target server error');
         res.status(404).send('Not found:' + req.originalUrl);
         return;
     }).on('response', function(response) {
@@ -55,14 +53,11 @@ function transport(req,res){
             bodyChunks.push(chunk);
         }).on('end', function() {
             var body = Buffer.concat(bodyChunks);
-            console.log(body);
             var afterRequest = routesConfig[req.path].afterRequest;
             if(afterRequest !== undefined){
                 afterRequest(req,res,body)
             }
             else {
-                console.log(JSON.parse(body));
-                // res.send(JSON.parse(body));
                 return ;
             }
         });
