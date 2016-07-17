@@ -1,100 +1,95 @@
-'use strict';
-
-const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
+/**
+ * Created by royhyang on 2016/7/15.
+ */
+"use strict";
+var router = require('express').Router();
 const printer = require("../lib/printer");
-const cos = require("../lib/cos");
-const mongo = require("../lib/mongo");
+const util = require('../lib/util');
 
-function upload(request, response) {
-    // initial a print util
-    const print = printer(request, response);
-    
-    console.log("#0. Start processing upload...");
-    // use multer to handle the upload process
-    const processUpload = multer({ 
-        dest: "/data/uploads/project4.qcourse.net",
-        limits: {
-            fileSize: 3 * 1024 * 1024, // support max size at 3M
-        }
-    }).single('image');
-    processUpload(request, response, uploadToServer);
-    
-    function uploadToServer(uploadError) {
-        
-        if (uploadError) {
-            print({ uploadError });
-            return;
-        }
-        
-        // check if any file uploaded
-        const file = request.file;
-        if (!file) {
-            print({ msg: "file is required" });
-            return;
-        }
-        console.log("#1. File uploaded to server:");
-        console.log(JSON.stringify(file, null, 4));
-        
-        uploadToCos(file);
-    }
-    
-    function uploadToCos(file) {
-        // upload file to cos
-        const uploadPath = `/uploads/${file.filename}${path.extname(file.originalname)}`;
-        cos.upload(file.path, 'image', uploadPath, file.filename, (cosResult) => {
-            
-            console.log("#2. File uploaded to cos:");
-            console.log(JSON.stringify(cosResult, null, 4));
-            
-            // upload to cos error
-            if (cosResult.code) {
-                print({ cosError: cosResult });
-                return;
+module.exports.delRedis = function(req,res,data){
+    const print = printer(req, res);
+    data = JSON.parse(data);
+    let fileInfo = data.fileInfo;
+    try {
+        console.log(fileInfo);
+        if (fileInfo) {
+            console.log("enter if")
+            let labels = [];
+            if (fileInfo.name) {
+                labels.push(fileInfo.name)
             }
-            
-            // clean up local store
-            fs.unlink(file.path);
-            
-            // prepare file info, insert to mongodb later
-            const fileInfo = {
-                name: file.originalname,
-                size: file.size,
-                mime: file.mimetype,
-                url: cosResult.data.access_url,
-                cos: cosResult.data, // save all cos context
-                meta: {}
-            };
-            
-            saveToMongo(fileInfo);
-        });
-    }
-    
-    function saveToMongo(fileInfo) {
-        // connect to mongodb
-        mongo.connect((mongoError, db) => {
-            if (mongoError) {
-                print({ mongoError });
-                db.close();
-                return;
-            }
-            
-            // insert fileInfo to the `image` connection 
-            const collection = db.collection("images");
-            collection.insertOne(fileInfo, (insertError, insertResult) => {
-                if (insertError) {
-                    print({ insertError });
-                    db.close();
-                    return;
+            let meta = fileInfo.meta;
+            if (meta) {
+                if (meta.author) {
+                    labels.push(meta.author);
                 }
-                console.log("#3. Saved to mongodb:");
-                console.log(JSON.stringify({ insertResult, fileInfo }, null, 4));
-                
-                print({ fileInfo });
-                db.close();
+                if (meta.labels) {
+                    labels.push(meta.labels);
+                }
+                if (meta.alt) {
+                    labels.push(meta.alt);
+                }
+            }
+            var redisClient = require('../lib/redis');
+            redisClient.smembers('keys',function(err,result) {
+                if(err){
+                    throw err
+                }
+                else if(result.length>0){
+                    var regs = [];
+                    var buffer = [];
+                    result.forEach(function(key){
+                        var keyword = key.match(/^(.*)\\.*\\.*$/)[1];
+                        if(keyword) {
+                            var reg = new RegExp('^.*'+util.escapeRegExp(keyword)+'.*$');
+                            labels.forEach(function(label){
+                                if(reg.test(label)){
+                                    buffer.push(key)
+                                }
+                            })
+                        }
+                    });
+                    if(buffer.length){
+                        redisClient.del(buffer);
+                        redisClient.srem('keys',buffer);
+                    }
+                }
             });
-        });
+        }
     }
-}
-module.exports = upload;
+    catch (e){
+        console.log(e);
+    }
+    finally  {
+        console.log('end');
+        print(data);
+    }
+};
+
+module.exports.delRedisAll = function(req,res,data){
+    const print = printer(req, res);
+    data = JSON.parse(data);
+    let fileInfo = data.fileInfo;
+    try {
+        if (fileInfo) {
+            var redisClient = require('../lib/redis');
+            redisClient.smembers('keys',function(err,result) {
+                if(err){
+                    throw err
+                }
+                else if(result.length>0){
+                    console.log(result);
+                    redisClient.del(result);
+                    redisClient.srem('keys',result);
+                }
+            });
+        }
+    }
+    catch (e){
+        console.log(e);
+    }
+    finally  {
+        console.log('end');
+        print(data);
+    }
+};

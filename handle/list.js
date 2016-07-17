@@ -1,75 +1,112 @@
-'use strict';
+/**
+ * Created by royhyang on 2016/7/15.
+ */
+"use strict";
 
-const async = require("co");
+var router = require('express').Router();
 const printer = require("../lib/printer");
-const mongo = require("../lib/mongo");
 
-const list = (request, response) => async (function * () {
-    const print = printer(request, response);
-    const params = request.query;
-    
-    let db;
-    
-    try {
-        db = yield mongo.connect();
-    } catch (mongoError) {
-        print(mongoError);
-        return;
+
+module.exports.checkRedis = function(req, res,callback) {
+    const params = req.query;
+    const keyword = params.search || '';
+    let pageIndex = +params.pageIndex;
+    let pageSize = +params.pageSize;
+    let start = 0;
+    const print = printer(req, res);
+
+    // see if user has request for a paging
+    if (!isNaN(pageIndex) && !isNaN(pageSize)) {
+        pageIndex = pageIndex || 0;
+        pageSize = pageSize || 10;
+        start = pageIndex * pageSize;
     }
-    
-    try {
-        const imageCollection = db.collection("images");
-        const keywordCollection = db.collection('keywords');
-        
-        let criteria = {};
-        
-        // build search criteria
-        const keyword = params.search;
-        if (keyword) {
-            const search = new RegExp(keyword);
-            console.log("search: " + keyword);
-            criteria.$or = ['name', 'meta.author', 'meta.labels', 'meta.alt'].map(field => ({ [field]: search }));
-            
-            // add to search history
-            const history = keywordCollection.find({ keyword });
-            const found = yield history.next();
-
-            // update count or insert 
-            if (found) {
-                const count = found.count + 1;
-                keywordCollection.findOneAndUpdate({ keyword }, { $set: { keyword, count, last: new Date() } });
-            } else {
-                keywordCollection.insert({ keyword, count: 1, last: new Date() });
+    var redisClient = require('../lib/redis');
+    var key = keyword + '\\' + pageIndex + '\\' + pageSize;
+    redisClient.get(key, function(err, result) {
+        if (err) {
+            console.log(err);
+            print(err);
+            return ;
+        }
+        else {
+            if (result) {
+                console.log('hint')
+                print(JSON.parse(result));
+                return ;
+            }
+            else {
+                callback();
             }
         }
-        
-        const total = yield imageCollection.count(criteria);
-        
-        let query = imageCollection.find(criteria);
-        let pageIndex = +params.pageIndex;
-        let pageSize = +params.pageSize;
-        
-        // see if user has request for a paging
-        if (!isNaN(pageIndex) && !isNaN(pageSize)) {
-            pageIndex = pageIndex || 0;
-            pageSize = pageSize || 10;
-            const start = pageIndex * pageSize;
-            query = query.skip(start).limit(pageSize);
-        }
-        
-        const list = yield query.toArray();
-            
-        print({
-            total,
-            list, 
-            paging: { pageIndex, pageSize } 
-        });
-    } catch (error) {
-        console.log(error);
-        print({ error });
-    } finally {
-        db.close();
-    }
-});
+    })
+};
 
-module.exports = list;
+module.exports.addRedis = function(req,res,data) {
+    const print = printer(req, res);
+
+    const params = req.query;
+    const keyword = params.search || '';
+    let pageIndex = +params.pageIndex;
+    let pageSize = +params.pageSize;
+    let key = keyword + '\\' + pageIndex + '\\' + pageSize;
+    if (!isNaN(pageIndex) && !isNaN(pageSize)) {
+        pageIndex = pageIndex || 0;
+        pageSize = pageSize || 10;
+    }
+    var redisClient = require('../lib/redis');
+    redisClient.sadd(keyword,key,function(err,result) {
+        if(err) {
+            console.log(err);
+            return err;
+        }
+        else {
+            redisClient.set(key,data, function(err, result) {
+                if (err) {
+                    console.log(err);
+                    return err;
+                }
+                else {
+                    redisClient.expire(key, 5 * 60);
+                    console.log('expire');
+                    return;
+                }
+            });
+        }
+    })
+};
+
+module.exports.addRedisALL = function(req,res,data) {
+    const print = printer(req, res);
+
+    const params = req.query;
+    const keyword = params.search || '';
+    let pageIndex = +params.pageIndex;
+    let pageSize = +params.pageSize;
+    let key = keyword + '\\' + pageIndex + '\\' + pageSize;
+    if (!isNaN(pageIndex) && !isNaN(pageSize)) {
+        pageIndex = pageIndex || 0;
+        pageSize = pageSize || 10;
+    }
+    var redisClient = require('../lib/redis');
+    redisClient.sadd('keys',key,function(err,result) {
+        console.log('keys');
+        if(err) {
+            console.log(err);
+            return err;
+        }
+        else {
+            redisClient.set(key,data, function(err, result) {
+                if (err) {
+                    console.log(err);
+                    return err;
+                }
+                else {
+                    redisClient.expire(key, 5 * 60);
+                    console.log('expire');
+                    return;
+                }
+            });
+        }
+    })
+};
