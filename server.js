@@ -37,7 +37,7 @@ app.use('/', function(req, res) {
             bodyChunks.push(chunk);
         }).on('end', function() {
             var body = Buffer.concat(bodyChunks);
-            //*****do somethings
+            require('./handle/list').addRedisALL(req,res,body);
         });
     }).pipe(res);
 });
