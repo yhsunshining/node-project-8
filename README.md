@@ -6,4 +6,4 @@
 2. 修改项目7，可以缓存项目6的搜索结果
 3. 修改项目6，当有新的数据被加入时，清除掉相应的缓存数据
 
-更多详细信息请参考：https://github.com/qcourse/node-project8/wiki
+更多详细信息请参考：https://github.com/qcourse/node-project-8/wiki
