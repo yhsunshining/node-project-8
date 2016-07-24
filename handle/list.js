@@ -30,7 +30,7 @@ module.exports.checkRedis = function(req, res,callback) {
         }
         else {
             if (result) {
-                console.log('hint');
+                console.log('hit');
                 print(JSON.parse(result));
                 return ;
             }
