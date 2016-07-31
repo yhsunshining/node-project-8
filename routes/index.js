@@ -16,13 +16,13 @@ module.exports = {
 	'/part4/upload': {
 		'method': 'post',
 		'path': '/upload',
-		afterRequest:require('../handle/upload').delRedis,
+		'afterRequest': require('../handle/upload').delRedis
 	},
 	'/part4/list': {
 		'method': 'get',
 		'path': '/list',
-		'beforeRequest':require('../handle/list').checkRedis,
-		'afterRequest':require('../handle/list').addRedisALL
+		'beforeRequest': require('../handle/list').checkRedis,
+		'afterRequest': require('../handle/list').addRedisALL
 	},
 	'/part4/meta': {
 		'method': 'put',
