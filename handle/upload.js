@@ -65,31 +65,3 @@ module.exports.delRedis = function(req,res,data){
         print(data);
     }
 };
-
-module.exports.delRedisAll = function(req,res,data){
-    const print = printer(req, res);
-    data = JSON.parse(data);
-    let fileInfo = data.fileInfo;
-    try {
-        if (fileInfo) {
-            var redisClient = require('../lib/redis');
-            redisClient.smembers('keys',function(err,result) {
-                if(err){
-                    throw err
-                }
-                else if(result.length>0){
-                    console.log(result);
-                    redisClient.del(result);
-                    redisClient.srem('keys',result);
-                }
-            });
-        }
-    }
-    catch (e){
-        console.log(e);
-    }
-    finally  {
-        console.log('end');
-        print(data);
-    }
-};

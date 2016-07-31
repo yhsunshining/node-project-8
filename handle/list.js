@@ -5,8 +5,7 @@
 
 var router = require('express').Router();
 const printer = require("../lib/printer");
-
-
+>>>>>>> 9c5f5ef228b9752619cf5e86c4f3847268ebfa29
 module.exports.checkRedis = function(req, res,callback) {
     const params = req.query;
     const keyword = params.search || '';
@@ -31,47 +30,13 @@ module.exports.checkRedis = function(req, res,callback) {
         }
         else {
             if (result) {
-                console.log('hint')
+                console.log('hit');
                 print(JSON.parse(result));
                 return ;
             }
             else {
                 callback();
             }
-        }
-    })
-};
-
-module.exports.addRedis = function(req,res,data) {
-    const print = printer(req, res);
-
-    const params = req.query;
-    const keyword = params.search || '';
-    let pageIndex = +params.pageIndex;
-    let pageSize = +params.pageSize;
-    let key = keyword + '\\' + pageIndex + '\\' + pageSize;
-    if (!isNaN(pageIndex) && !isNaN(pageSize)) {
-        pageIndex = pageIndex || 0;
-        pageSize = pageSize || 10;
-    }
-    var redisClient = require('../lib/redis');
-    redisClient.sadd(keyword,key,function(err,result) {
-        if(err) {
-            console.log(err);
-            return err;
-        }
-        else {
-            redisClient.set(key,data, function(err, result) {
-                if (err) {
-                    console.log(err);
-                    return err;
-                }
-                else {
-                    redisClient.expire(key, 5 * 60);
-                    console.log('expire');
-                    return;
-                }
-            });
         }
     })
 };
