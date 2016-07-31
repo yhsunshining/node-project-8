@@ -5,7 +5,6 @@
 
 var router = require('express').Router();
 const printer = require("../lib/printer");
->>>>>>> 9c5f5ef228b9752619cf5e86c4f3847268ebfa29
 module.exports.checkRedis = function(req, res,callback) {
     const params = req.query;
     const keyword = params.search || '';
