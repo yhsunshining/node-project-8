@@ -5,7 +5,10 @@
 
 var router = require('express').Router();
 const printer = require("../lib/printer");
-module.exports.checkRedis = function(req, res,callback) {
+const co = require('co')
+var redisClient = require('../lib/redis-promise');
+
+module.exports.checkRedis = (req,res,callback) =>co(function* (){
     const params = req.query;
     const keyword = params.search || '';
     let pageIndex = +params.pageIndex;
@@ -19,28 +22,26 @@ module.exports.checkRedis = function(req, res,callback) {
         pageSize = pageSize || 10;
         start = pageIndex * pageSize;
     }
-    var redisClient = require('../lib/redis');
     var key = keyword + '\\' + pageIndex + '\\' + pageSize;
-    redisClient.get(key, function(err, result) {
-        if (err) {
-            console.log(err);
-            print(err);
+    try {
+        var result = yield redisClient.get(key);
+        if(result) {
+            console.log('hit');
+            print(JSON.parse(result));
             return ;
         }
         else {
-            if (result) {
-                console.log('hit');
-                print(JSON.parse(result));
-                return ;
-            }
-            else {
-                callback();
-            }
+            callback();
         }
-    })
-};
+    }
+    catch (redisErr){
+        console.log(err);
+        print(err);
+        return ;
+    }
+});
 
-module.exports.addRedisALL = function(req,res,data) {
+module.exports.addRedisALL = (req,res,data) => co(function* (){
     const print = printer(req, res);
 
     const params = req.query;
@@ -52,25 +53,18 @@ module.exports.addRedisALL = function(req,res,data) {
         pageIndex = pageIndex || 0;
         pageSize = pageSize || 10;
     }
-    var redisClient = require('../lib/redis');
-    redisClient.sadd('keys',key,function(err,result) {
-        console.log('keys');
-        if(err) {
-            console.log(err);
-            return err;
-        }
-        else {
-            redisClient.set(key,data, function(err, result) {
-                if (err) {
-                    console.log(err);
-                    return err;
-                }
-                else {
-                    redisClient.expire(key, 5 * 60);
-                    console.log('expire');
-                    return;
-                }
-            });
-        }
-    })
-};
+    try{
+        var result = yield redisClient.sadd('keys',key);
+        console.log(result);
+        result = yield redisClient.set(key,data);
+        console.log(result);
+        result = yield redisClient.expire(key,5*60);
+        console.log(result);
+        console.log('expire in 5 minutes.');
+        return ;
+    }
+    catch (redisErr){
+        console.log(err);
+        return err;
+    }
+});

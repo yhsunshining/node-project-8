@@ -57,9 +57,6 @@ function transport(req,res){
             if(afterRequest !== undefined){
                 afterRequest(req,res,body)
             }
-            else {
-                return ;
-            }
         });
     }).pipe(res);
 }
