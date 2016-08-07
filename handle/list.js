@@ -25,6 +25,7 @@ module.exports.checkRedis = (req,res,callback) =>co(function* (){
     var key = keyword + '\\' + pageIndex + '\\' + pageSize;
     try {
         var result = yield redisClient.get(key);
+        console.log(result);
         if(result) {
             console.log('hit');
             print(JSON.parse(result));
@@ -35,8 +36,8 @@ module.exports.checkRedis = (req,res,callback) =>co(function* (){
         }
     }
     catch (redisErr){
-        console.log(err);
-        print(err);
+        console.log(redisErr);
+        print(redisErr);
         return ;
     }
 });
@@ -64,7 +65,7 @@ module.exports.addRedisALL = (req,res,data) => co(function* (){
         return ;
     }
     catch (redisErr){
-        console.log(err);
-        return err;
+        console.log(redisErr);
+        return redisErr;
     }
 });
